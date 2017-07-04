@@ -1,0 +1,239 @@
+textAlign(CENTER, CENTER);
+textFont(createFont('Trebuchet MS Bold'));
+rectMode(CENTER);
+
+var yellow = color(241, 196, 15);
+var orange = color(243, 156, 18);
+
+var mouse = {
+	press: false,
+	release: 'Banana',
+	move: false,
+	scroll: false,
+
+	hasReleased: false
+};
+mousePressed = function() {
+	mouse.press = true;
+};
+mouseClicked = function() {
+	mouse.release = true;
+};
+mouseMoved = function() {
+	mouse.moved = true;
+};
+mouseScrolled = function() {
+	mouse.scroll = mouseScroll;
+};
+
+var drawBackground = function(c) {
+	background(c ? c : 75);
+	for (var i = 0; i < width * 1.5; i += 20) {
+		fill(255, 255, 255, i / 200);
+		noStroke();
+		ellipse(width / 2, height / 2, i, i);
+	}
+};
+drawBackground();
+var bg = get(0, 0, width, height);
+var drawLogo = function(x, y, s, r, h) {
+	this.letter = function(l, x, y, s) {
+		pushMatrix();
+		translate(x, y);
+		scale(s / 200);
+		switch (l.toLowerCase()) {
+			case 'y':
+				{
+					line(0, 0, 0, 100);
+					line(0, 0, -50, -100);
+					line(0, 0, 50, -100);
+				}
+				break;
+			case 'e':
+				{
+					line(-50, -100, -50, 100);
+					line(-50, -100, 50, -100);
+					line(-50, 100, 50, 100);
+					line(-50, 0, 30, 0);
+				}
+				break;
+			case 'l':
+				{
+					line(-50, -100, -50, 100);
+					line(-50, 100, 50, 100);
+				}
+				break;
+			case 'o':
+				{
+					ellipse(0, 0, 100, 200);
+				}
+				break;
+			case 'w':
+				{
+					line(-50, -100, -25, 100);
+					line(0, -100, -25, 100);
+					line(50, -100, 25, 100);
+					line(0, -100, 25, 100);
+				}
+		}
+		popMatrix();
+	};
+	pushMatrix();
+	translate(x, y);
+	scale(s / 400);
+	scale(1, h ? h : 1);
+	rotate(r);
+
+	this.letter('Y', -168, 0, 100);
+	this.letter('E', -102, 0, 100);
+	this.letter('L', -39, 0, 100);
+	this.letter('L', 26, 0, 100);
+	this.letter('O', 85, 0, 100);
+	this.letter('W', 147, 0, 100);
+	popMatrix();
+};
+var drawLogo2 = function(x, y, s, r, h) {
+	noFill();
+	stroke(196, 157, 2);
+	strokeWeight(41 * (s / 300));
+	drawLogo(x, y + (6 * (s / 300)), s, r, h);
+	stroke(yellow);
+	strokeWeight(41 * (s / 300));
+	drawLogo(x, y, s, r, h);
+	stroke(255, 155, 0);
+	strokeWeight(18 * (s / 300));
+	drawLogo(x, y, s, r, h);
+};
+var drawButton = function(x, y, d, style, str) {
+	this.pressed = false;
+	this.over = mouseX === constrain(mouseX, x - 37.5, x + 37.5) && mouseY === constrain(mouseY, y - 37.5, y + 37.5);
+	if (this.over) {
+		cursor('Pointer');
+		if (mouseIsPressed) {
+			this.pressed = true;
+		}
+	}
+	fill(yellow);
+	strokeWeight(1);
+	stroke(orange);
+	if (!str) {
+		noStroke();
+	}
+	rect(x, y, this.pressed ? 70 : 75, this.pressed ? 70 : 75, 5);
+	var conditions = [
+		['release', this.over && mouse.release],
+		['press', this.over && mouse.press],
+		['hover', this.over],
+		['hold', this.over && mouseIsPressed],
+	];
+	for (var i = 0; i < conditions.length; i++) {
+		if (style.toLowerCase() === conditions[i][0] && conditions[i][1]) {
+			d();
+		}
+	}
+};
+var drawStamp = function(x, y, s, r) {
+	pushMatrix();
+	translate(x, y);
+	scale(s / 300);
+	rotate(r);
+	stroke(orange);
+	strokeWeight(30);
+	fill(yellow);
+	ellipse(0, 0, 300, 300);
+	drawLogo(0, 0, 263, 0);
+	popMatrix();
+};
+
+var level = 1;
+
+var nextLevel = function() {
+	level++;
+};
+
+var v = [
+    {
+	logoX: width * 5,
+	logoH: 0.4,
+	logoR: 3600,
+	circle: 0,
+}, 
+{
+    isDragging1:false,
+    isDragging2:false,
+    y1:50,
+    y2:50,
+},
+];
+
+var createScene = [
+	function() {
+		v[level].circle = constrain(v[level].circle, 0, 9999);
+
+		drawLogo2(250 + v[level].logoX, 100, 383, v[level].logoR, v[level].logoH);
+		v[level].logoX += (0 - v[level].logoX) / 10;
+		v[level].logoR += (0 - v[level].logoR) / 10;
+		if (frameCount > 75) {
+			v[level].logoH += (0.9 - v[level].logoH) / 7.5;
+		}
+		drawButton(250, 250, function() {
+			v[level].circle += 10;
+		}, 'HOLD');
+		fill(255);
+		textSize(42);
+		text('Instructions:\nMake the whole\nscreen yellow!', 250, 402);
+		pushMatrix();
+		translate(107, 216);
+		rotate(15);
+		textSize(20);
+		text('Hold on the button ►', 0, 0);
+		popMatrix();
+		fill(yellow);
+		ellipse(width / 2, height / 2, v[level].circle, v[level].circle);
+		v[level].circle -= 7;
+		if (v[level].circle > 800) {
+			nextLevel();
+		}
+
+	},
+	function() {
+	    
+	},
+];
+
+
+draw = function() {
+    cursor('Default');
+	imageMode(CENTER);
+	image(bg, width / 2, height / 2);
+	//createScene[level]();
+	v[level].y1 = constrain(v[level].y1, 0, height/2);
+    fill(yellow);
+	rect(width/2, v[level].y1-(height/4), width, height/2);
+	rect(width/2, height-(v[level].y2-(height/4)), width, height/2);
+	if (mouseY === constrain(mouseY, 0, v[level].y1)){
+	    cursor('Pointer');
+	    if (mouse.press) {
+	        v[level].isDragging1 = true;
+	    }
+	}
+	if (mouse.release||v[level].y1 > height/2){
+	    v[level].isDragging1 = false;
+	    v[level].isDragging2 = false;
+	    if (v[level].y1 > height/2) {
+	        v[level].y1 = height/2;
+	        v[level].isDragging1 = false;
+	    }
+	}
+	if (v[level].isDragging1) {
+	    v[level].y1 += mouseY-pmouseY;
+	}
+	mouse = {
+		press: false,
+		release: false,
+		move: false,
+		scroll: false,
+	};
+	_clearLogs();
+	//println(v.circle);
+};
